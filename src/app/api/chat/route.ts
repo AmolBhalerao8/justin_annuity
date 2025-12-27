@@ -114,10 +114,13 @@ function getFallbackResponse(message: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  let userMessage = ''
+  
   try {
-    const { message } = await request.json()
+    const body = await request.json()
+    userMessage = body.message || ''
 
-    if (!message) {
+    if (!userMessage) {
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
@@ -128,7 +131,7 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey) {
       return NextResponse.json({
-        message: getFallbackResponse(message)
+        message: getFallbackResponse(userMessage)
       })
     }
 
@@ -138,7 +141,7 @@ export async function POST(request: NextRequest) {
       model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
+        { role: 'user', content: userMessage }
       ],
       max_tokens: 500,
       temperature: 0.7,
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Chat API error:', error)
     return NextResponse.json({
-      message: getFallbackResponse(message)
+      message: getFallbackResponse(userMessage)
     })
   }
 }
